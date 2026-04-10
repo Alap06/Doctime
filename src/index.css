@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+:root {
+  font-family: 'Satoshi', 'General Sans', 'Manrope', 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: #0f172a;
+  background: #f8fafc;
+}
