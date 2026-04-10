@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, Circle, useMap } from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import L from 'leaflet';
@@ -364,12 +364,22 @@ export function MapPage(): React.JSX.Element {
           ))}
           
           {/* Marqueurs */}
-          {filtered.map((doctor) => (
-            doctor.latitude && doctor.longitude && (
+          {filtered.map((doctor) => {
+            if (!(doctor.latitude && doctor.longitude)) {
+              return null;
+            }
+
+            const markerIcon = getMarkerIcon(doctor.specialty);
+            const markerHtml = markerIcon.options.html;
+            const markerColor = typeof markerHtml === 'string'
+              ? (markerHtml.match(/#[a-f0-9]{6}/i)?.[0] ?? '#6b7280')
+              : '#6b7280';
+
+            return (
               <Marker
                 key={doctor.id}
                 position={[doctor.latitude, doctor.longitude]}
-                icon={getMarkerIcon(doctor.specialty)}
+                icon={markerIcon}
                 eventHandlers={{
                   click: () => setSelectedDoctor(doctor)
                 }}
@@ -378,7 +388,7 @@ export function MapPage(): React.JSX.Element {
                   <div className="min-w-[240px] p-1">
                     <div className="flex items-start gap-3 mb-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold text-white`}
-                        style={{ backgroundColor: getMarkerIcon(doctor.specialty).options.html?.match(/#[a-f0-9]{6}/i)?.[0] || '#6b7280' }}>
+                        style={{ backgroundColor: markerColor }}>
                         {doctor.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
                       <div className="flex-1">
@@ -420,8 +430,8 @@ export function MapPage(): React.JSX.Element {
                   </div>
                 </Popup>
               </Marker>
-            )
-          ))}
+            );
+          })}
         </MapContainer>
         
         {/* Stats Panel */}
