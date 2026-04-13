@@ -2,6 +2,14 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import type { UserRole } from '../types/models';
+
+function getRoleHome(role: UserRole): string {
+  if (role === 'admin') {
+    return '/admin';
+  }
+  return '/dashboard';
+}
 
 export function LoginPage(): React.JSX.Element {
   const navigate = useNavigate();
@@ -9,13 +17,16 @@ export function LoginPage(): React.JSX.Element {
   const loading = useAuthStore((state) => state.loading);
   const error = useAuthStore((state) => state.error);
 
-  const [email, setEmail] = useState('patient@doctime.app');
-  const [password, setPassword] = useState('Password123!');
+  const [email, setEmail] = useState('user@test.com');
+  const [password, setPassword] = useState('123456');
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const ok = await login(email, password);
-    if (ok) navigate('/dashboard');
+    if (ok) {
+      const currentUser = useAuthStore.getState().user;
+      navigate(getRoleHome(currentUser?.role ?? 'user'));
+    }
   };
 
   return (
@@ -101,6 +112,13 @@ export function LoginPage(): React.JSX.Element {
               Inscription gratuite
             </Link>
           </p>
+
+          <div className="mt-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-cyan-200">
+            <p className="font-semibold">Comptes de test</p>
+            <p>user@test.com / 123456</p>
+            <p>doctor@test.com / 123456</p>
+            <p>admin@test.com / admin123</p>
+          </div>
         </div>
       </div>
     </div>

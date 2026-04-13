@@ -3,16 +3,18 @@ import type { FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Doctor } from '../types/models';
+import { useAuthStore } from '../store/authStore';
 
 type Step = 'identity' | 'slot' | 'medical' | 'confirm';
 
 export function BookingPage(): React.JSX.Element {
   const { doctorId = '' } = useParams();
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [step, setStep] = useState<Step>('identity');
 
-  const [patientName, setPatientName] = useState('');
+  const [patientName, setPatientName] = useState(user?.fullName ?? '');
   const [phone, setPhone] = useState('');
   const [age, setAge] = useState('');
   const [sex, setSex] = useState<'M' | 'F'>('F');
@@ -32,7 +34,7 @@ export function BookingPage(): React.JSX.Element {
       .catch(() => setError('Impossible de charger ce medecin.'));
   }, [doctorId]);
 
-  const identityValid = patientName.length > 2 && phone.length >= 8 && Number(age) >= 18;
+  const identityValid = patientName.length > 2 && phone.length >= 8 && Number(age) >= 0;
   const medicalValid = issueDescription.length >= 10;
   const canSubmit = identityValid && medicalValid;
 
@@ -59,6 +61,12 @@ export function BookingPage(): React.JSX.Element {
     if (!canSubmit) {
       return;
     }
+
+    if (!user) {
+      setError('Session invalide. Merci de vous reconnecter.');
+      return;
+    }
+
     try {
       await api.createAppointment({
         patientName,
@@ -79,6 +87,10 @@ export function BookingPage(): React.JSX.Element {
 
   if (error && !doctor) {
     return <p className="text-sm font-semibold text-rose-600">{error}</p>;
+  }
+
+  if (user?.role === 'doctor') {
+    return <p className="text-sm font-semibold text-slate-700">Un compte docteur ne peut pas reserver un rendez-vous patient.</p>;
   }
 
   if (!doctor) {

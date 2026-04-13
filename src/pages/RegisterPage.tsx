@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import type { UserRole } from '../types/models';
 
 export function RegisterPage(): React.JSX.Element {
   const navigate = useNavigate();
@@ -10,14 +11,14 @@ export function RegisterPage(): React.JSX.Element {
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<Exclude<UserRole, 'admin'>>('user');
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    const ok = await register({ fullName, email, phone, password });
+    const ok = await register({ fullName, email, password, role });
     if (ok) {
       navigate('/login');
       return;
@@ -45,26 +46,15 @@ export function RegisterPage(): React.JSX.Element {
 
         <div className="rounded-2xl border border-white/8 bg-white/3 p-6 md:p-8">
           <form onSubmit={onSubmit} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-400 uppercase tracking-wider">Nom complet</label>
-                <input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Prénom Nom"
-                  required
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/60 transition-all"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-400 uppercase tracking-wider">Téléphone</label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+216 XX XXX XXX"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/60 transition-all"
-                />
-              </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-400 uppercase tracking-wider">Nom complet</label>
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Prénom Nom"
+                required
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/60 transition-all"
+              />
             </div>
 
             <div>
@@ -85,11 +75,24 @@ export function RegisterPage(): React.JSX.Element {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 8 caractères"
+                placeholder="Minimum 6 caractères"
                 required
-                minLength={8}
+                minLength={6}
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/60 transition-all"
               />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-400 uppercase tracking-wider">Rôle</label>
+              <select
+                aria-label="Selection du role"
+                value={role}
+                onChange={(e) => setRole(e.target.value as Exclude<UserRole, 'admin'>)}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/60 transition-all"
+              >
+                <option className="text-slate-900" value="user">Utilisateur (Patient)</option>
+                <option className="text-slate-900" value="doctor">Docteur</option>
+              </select>
             </div>
 
             {error && (

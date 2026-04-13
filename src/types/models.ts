@@ -1,9 +1,11 @@
-export type UserRole = 'patient' | 'doctor' | 'admin';
+export type UserRole = 'user' | 'doctor' | 'admin';
 
 export type UserProfile = {
   id: string;
   fullName: string;
+  email: string;
   role: UserRole;
+  doctorId?: string;
 };
 
 export type Doctor = {
@@ -36,6 +38,7 @@ export type AppointmentStatus = 'upcoming' | 'completed' | 'cancelled';
 
 export type Appointment = {
   id: string;
+  userId: string;
   doctorId: string;
   doctorName?: string;
   patientName?: string;

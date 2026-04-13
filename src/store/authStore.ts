@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../services/api';
-import type { UserProfile } from '../types/models';
+import type { UserProfile, UserRole } from '../types/models';
+import { ensureMockData, getCurrentUser } from '../services/mockDb';
 
 type AuthState = {
   token: string | null;
@@ -8,16 +9,19 @@ type AuthState = {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (payload: { fullName: string; email: string; phone: string; password: string }) => Promise<boolean>;
+  register: (payload: { fullName: string; email: string; password: string; role: Exclude<UserRole, 'admin'> }) => Promise<boolean>;
   logout: () => void;
 };
 
+ensureMockData();
+
 const savedToken = localStorage.getItem('doctime_web_token');
 const savedUser = localStorage.getItem('doctime_web_user');
+const currentUser = getCurrentUser();
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: savedToken,
-  user: savedUser ? (JSON.parse(savedUser) as UserProfile) : null,
+  user: savedUser ? (JSON.parse(savedUser) as UserProfile) : currentUser,
   loading: false,
   error: null,
 
@@ -42,7 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ loading: false });
       return true;
     } catch {
-      set({ loading: false, error: 'Inscription impossible pour le moment.' });
+      set({ loading: false, error: 'Inscription impossible. Email deja utilise ou donnees invalides.' });
       return false;
     }
   },
@@ -50,6 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem('doctime_web_token');
     localStorage.removeItem('doctime_web_user');
+    void api.logout();
     set({ token: null, user: null, error: null });
   }
 }));

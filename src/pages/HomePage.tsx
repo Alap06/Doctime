@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
+import type { Doctor } from '../types/models';
 
 const SPECIALTIES = [
   { icon: '🫀', label: 'Cardiologie' },
@@ -39,7 +41,7 @@ const FEATURE_FLAGS = [
   },
 ];
 
-const HIGHLIGHT_DOCTORS = [
+const DEFAULT_HIGHLIGHT_DOCTORS = [
   {
     id: 'd1',
     name: 'Dr Sarah Benali',
@@ -201,7 +203,33 @@ const FAQ = [
 
 export function HomePage(): React.JSX.Element {
   const [query, setQuery] = useState('');
+  const [highlightDoctors, setHighlightDoctors] = useState(DEFAULT_HIGHLIGHT_DOCTORS);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadHighlights = async (): Promise<void> => {
+      try {
+        const res = await api.listDoctors();
+        const doctors = res.items.slice(0, 4).map((doctor: Doctor) => ({
+          id: doctor.id,
+          name: doctor.fullName,
+          specialty: doctor.specialty,
+          city: doctor.city,
+          rating: doctor.rating,
+          reviews: doctor.reviewCount,
+          nextSlot: doctor.availability?.[0] ?? 'Prochainement'
+        }));
+
+        if (doctors.length > 0) {
+          setHighlightDoctors(doctors);
+        }
+      } catch {
+        setHighlightDoctors(DEFAULT_HIGHLIGHT_DOCTORS);
+      }
+    };
+
+    void loadHighlights();
+  }, []);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -347,7 +375,7 @@ export function HomePage(): React.JSX.Element {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {HIGHLIGHT_DOCTORS.map((doctor) => (
+            {highlightDoctors.map((doctor) => (
               <article key={doctor.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400">{doctor.specialty}</p>
                 <h3 className="mt-2 text-lg font-black">{doctor.name}</h3>
